@@ -1,0 +1,25 @@
+# Зависимости
+node_modules/
+
+# Окружение
+.env
+
+# Временные файлы
+tmp/
+*.pdf
+*.html
+
+# Логи
+logs/
+*.log
+
+# Данные (создаются на сервере)
+data/*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

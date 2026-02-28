@@ -1,0 +1,17 @@
+{
+  "name": "construction-automation",
+  "version": "1.0.0",
+  "description": "Автоматизация генерации коммерческих предложений для строительной компании",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "node-telegram-bot-api": "^0.67.0",
+    "puppeteer": "^21.6.1",
+    "uuid": "^9.0.0"
+  }
+}

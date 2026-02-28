@@ -1,0 +1,57 @@
+[
+  {
+    "id": "a6a2bdfabaa33a11",
+    "filename": "kp_a6a2bdfabaa33a11.html",
+    "leadName": "Алексей Петров",
+    "leadPhone": "+7 918 555-12-34",
+    "area": 150,
+    "totalCash": 6665400,
+    "createdAt": "2026-02-26T19:35:56.254Z",
+    "views": 1,
+    "lastViewedAt": "2026-02-26T19:36:41.925Z"
+  },
+  {
+    "id": "0e0df4a7d8094fe1",
+    "filename": "kp_0e0df4a7d8094fe1.html",
+    "leadName": "Тестовый Клиент",
+    "leadPhone": "+7 (999) 123-45-67",
+    "area": 150,
+    "totalCash": 8051000,
+    "createdAt": "2026-02-28T12:30:09.567Z",
+    "views": 1,
+    "lastViewedAt": "2026-02-28T12:31:03.046Z"
+  },
+  {
+    "id": "39a38c36998ad6d5",
+    "filename": "kp_39a38c36998ad6d5.html",
+    "leadName": "Марина",
+    "leadPhone": "+7 (999) 123-45-67",
+    "area": 150,
+    "totalCash": 8051000,
+    "createdAt": "2026-02-28T12:52:13.473Z",
+    "views": 1,
+    "lastViewedAt": "2026-02-28T12:53:20.480Z"
+  },
+  {
+    "id": "603386b5429331cd",
+    "filename": "kp_603386b5429331cd.html",
+    "leadName": "Тест 1.5эт",
+    "leadPhone": "+7 (999) 123-45-67",
+    "area": 150,
+    "totalCash": 7836750,
+    "createdAt": "2026-02-28T13:50:28.187Z",
+    "views": 1,
+    "lastViewedAt": "2026-02-28T13:51:23.470Z"
+  },
+  {
+    "id": "62e76ad463e9e079",
+    "filename": "kp_62e76ad463e9e079.html",
+    "leadName": "Проверка формулы",
+    "leadPhone": "+7 (999) 123-45-67",
+    "area": 150,
+    "totalCash": 7495500,
+    "createdAt": "2026-02-28T14:39:03.083Z",
+    "views": 1,
+    "lastViewedAt": "2026-02-28T14:40:43.472Z"
+  }
+]
