@@ -12,6 +12,10 @@ module.exports = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '',
   },
+  supabase: {
+    url: process.env.SUPABASE_URL || '',
+    key: process.env.SUPABASE_KEY || '',
+  },
   isDemo() {
     return this.mode === 'demo' || !this.telegram.token;
   },

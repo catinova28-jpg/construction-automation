@@ -1,12 +1,13 @@
 /**
- * Локальное хранилище лидов
- * Сохраняет в JSON-файл для простоты (MVP)
+ * Локальное хранилище лидов + Supabase
+ * JSON-файл как fallback, Supabase как основная БД
  */
 
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
+const { getSupabase } = require('../utils/supabase');
 
 const DATA_FILE = path.join(__dirname, '../../data/leads.json');
 
@@ -26,6 +27,47 @@ class LeadsStore {
 
     _save() {
         fs.writeFileSync(DATA_FILE, JSON.stringify(this.leads, null, 2), 'utf8');
+    }
+
+    /**
+     * Сохранить лида в Supabase
+     */
+    async _saveToSupabase(lead) {
+        const sb = getSupabase();
+        if (!sb) return;
+
+        try {
+            const row = {
+                id: lead.id,
+                name: lead.name || '',
+                phone: lead.phone || '',
+                area: lead.area ? parseInt(lead.area) : null,
+                floors: lead.floors || '',
+                floor_type: lead.floorType || '',
+                roof_style: lead.roofStyle || '',
+                wall_height: lead.wallHeight || '',
+                budget: lead.budget || null,
+                location: lead.location || '',
+                services: lead.services || [],
+                payment_form: lead.paymentForm || '',
+                timing: lead.timing || '',
+                status: lead.status || 'new',
+                pipeline: lead.pipeline || {},
+                chat_id: lead.chatId || null,
+                temperature: lead.temperature || null,
+                created_at: lead.createdAt,
+                updated_at: lead.updatedAt,
+            };
+
+            const { error } = await sb.from('leads').upsert(row, { onConflict: 'id' });
+            if (error) {
+                logger.warn('Supabase', 'Ошибка сохранения: ' + error.message);
+            } else {
+                logger.success('Supabase', 'Лид синхронизирован: ' + lead.name);
+            }
+        } catch (err) {
+            logger.warn('Supabase', 'Ошибка: ' + err.message);
+        }
     }
 
     /**
@@ -49,6 +91,10 @@ class LeadsStore {
         this.leads.push(lead);
         this._save();
         logger.success('Store', `Лид сохранён: ${lead.id} (${lead.name})`);
+
+        // Async сохранение в Supabase
+        this._saveToSupabase(lead).catch(() => { });
+
         return lead;
     }
 
@@ -65,6 +111,10 @@ class LeadsStore {
             updatedAt: new Date().toISOString(),
         };
         this._save();
+
+        // Async сохранение в Supabase
+        this._saveToSupabase(this.leads[index]).catch(() => { });
+
         return this.leads[index];
     }
 
@@ -86,6 +136,10 @@ class LeadsStore {
         else lead.status = 'new';
 
         this._save();
+
+        // Async сохранение в Supabase
+        this._saveToSupabase(lead).catch(() => { });
+
         return lead;
     }
 
