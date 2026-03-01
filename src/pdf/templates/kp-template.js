@@ -95,7 +95,10 @@ function generateKPTemplate(proposal, leadData) {
   var wallHeightNum = parseFloat(wallHeight);
   var pLength = (proposal.params && proposal.params.length) || '—';
   var pWidth = (proposal.params && proposal.params.width) || '—';
-  var numFloors = floors === '2' ? 2 : (floors === '1.5' || floors === '15' || floorType === 'mansard') ? 1.5 : 1;
+  var isHitechRoof = (roofStyle === 'flat' || roofStyle === 'shed' || roofStyle === 'hitech');
+  var numFloors = (isHitechRoof && (floorType === 'mansard' || floors === '1.5' || floors === '15')) ? 2 :
+    (floorType === 'mansard' || floors === '1.5' || floors === '15') ? 1.5 :
+      (floors === '2') ? 2 : 1;
   var location = leadData.location || 'Уточняется';
   var greeting = proposal.greeting || 'Здравствуйте!';
   var companyIntro = proposal.companyIntro || 'Производственно-строительная компания «ХОРС» специализируется на возведении современных энергоэффективных домов из СИП панелей.';
