@@ -454,10 +454,10 @@ _Всё верно?_`;
             logger.error('Bot', 'Ошибка CRM', err.message);
         }
 
-        // 3. Планируем таймер (10 сек в демо / 1 час в проде)
-        const delay = config.isDemo() ? 10000 : 3600000;
+        // 3. Отправляем видео + КП сразу (5 сек задержка для стабильности)
+        const delay = 5000;
         scheduler.schedule(lead.id, { ...data, leadId: lead.id, chatId }, delay);
-        logger.step(3, 6, `Таймер установлен: ${config.isDemo() ? '10 сек' : '1 час'}`);
+        logger.step(3, 6, `КП будет отправлено через 5 сек`);
 
         this.sessions.delete(chatId);
     }
