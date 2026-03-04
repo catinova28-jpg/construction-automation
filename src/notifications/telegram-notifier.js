@@ -114,7 +114,15 @@ ${temperatureEmoji}
                 await this.bot.sendMessage(this.chatId, text, { parse_mode: 'Markdown' });
                 logger.success('Notifier', 'Уведомление отправлено');
             } catch (err) {
-                logger.error('Notifier', 'Ошибка отправки уведомления', err.message);
+                // Если Markdown не парсится — отправляем без форматирования
+                logger.error('Notifier', 'Markdown ошибка, отправляю без форматирования', err.message);
+                try {
+                    const plainText = text.replace(/\*/g, '').replace(/_/g, '');
+                    await this.bot.sendMessage(this.chatId, plainText);
+                    logger.success('Notifier', 'Уведомление отправлено (plain text)');
+                } catch (err2) {
+                    logger.error('Notifier', 'Ошибка отправки уведомления', err2.message);
+                }
             }
         } else {
             logger.demo('Notifier', `[→ ${this.chatId}] ${text.replace(/\*/g, '').substring(0, 120)}...`);
