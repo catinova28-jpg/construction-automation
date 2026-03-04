@@ -12,9 +12,15 @@ module.exports = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '',
   },
+  notifications: {
+    chatId: process.env.TELEGRAM_NOTIFY_CHAT_ID || '',
+  },
   supabase: {
     url: process.env.SUPABASE_URL || '',
     key: process.env.SUPABASE_KEY || '',
+  },
+  hasNotifications() {
+    return !!this.notifications.chatId;
   },
   isDemo() {
     return this.mode === 'demo' || !this.telegram.token;

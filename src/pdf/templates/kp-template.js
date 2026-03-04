@@ -327,13 +327,19 @@ function generateKPTemplate(proposal, leadData) {
       '  </div>\n'
     ) : '') +
 
+    // CATALOG SECTION — single button to Yandex Disk PDF
+    '  <div style="margin-top:28px; page-break-before:always; text-align:center; padding:40px 20px;">\n' +
+    '    <div class="section-title" style="font-size:20px; margin-bottom:8px;">Наши проекты</div>\n' +
+    '    <div style="color:#94a3b8; font-size:13px; margin-bottom:24px;">14+ типовых проектов домов из СИП панелей — от 36 до 200 м²<br>с планировками, фасадами и фотографиями</div>\n' +
+    '    <a href="https://disk.yandex.ru/i/dN7pusiZJWHYog" target="_blank" style="display:inline-block; padding:14px 40px; background:linear-gradient(135deg,#c9a84c,#9a7b2e); color:#0f172a; font-size:15px; font-weight:700; border-radius:25px; text-decoration:none; box-shadow: 0 4px 15px rgba(201,168,76,0.3);">📖 Открыть каталог проектов (PDF)</a>\n' +
+    '  </div>\n' +
+
     // CTA
     '  <div class="cta-section">\n' +
     '    <p>Свяжитесь с нами для обсуждения деталей проекта, расчёта стоимости и выезда специалиста на объект!</p>\n' +
     '    <div class="cta-highlight">📞 <a href="tel:89882460202" style="color: inherit; text-decoration: none;">8 (988) 246-02-02</a></div>\n' +
     '    <div class="cta-links">\n' +
     '      <a href="https://domasmplus.ru" class="cta-link" target="_blank">🌐 Наш сайт</a>\n' +
-    '      <a href="https://asmplus.bitrix24.ru/~3RN5P" class="cta-link" target="_blank">🏠 Каталог домов</a>\n' +
     '    </div>\n' +
     '    <div class="cta-address">📍 Республика Адыгея, Тургеневское шоссе, 2</div>\n' +
     '  </div>\n' +
@@ -342,7 +348,7 @@ function generateKPTemplate(proposal, leadData) {
     '  <div class="footer">\n' +
     '    <strong>ПСК «ХОРС»</strong> · Производственно-строительная компания<br>\n' +
     '    Республика Адыгея, Тургеневское шоссе, 2 · тел. <a href="tel:89882460202" style="color: rgba(255,255,255,0.7); text-decoration: none;">8 (988) 246-02-02</a><br>\n' +
-    '    Данное предложение действительно 30 дней с даты формирования\n' +
+    '    Данное предложение действительно 15 дней с даты формирования\n' +
     '  </div>\n' +
 
     '</div>\n</body>\n</html>';

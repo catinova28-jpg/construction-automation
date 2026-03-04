@@ -13,6 +13,7 @@ const aiAgent = require('../ai/ai-agent');
 const pdfGenerator = require('../pdf/pdf-generator');
 const videoSender = require('../video/video-sender');
 const { getHouseImagePath, getHouseCaption } = require('../utils/house-image');
+const notifier = require('../notifications/telegram-notifier');
 
 class TelegramBot {
     constructor() {
@@ -506,12 +507,27 @@ _Всё верно?_`;
                 await this.bot.sendMessage(leadData.chatId,
                     `${leadData.name}, будем ждать вашу обратную связь! 🙏\n\nЕсли возникнут вопросы по коммерческому предложению — пишите прямо сюда, мы на связи. 💬`
                 );
+
+                // Уведомляем менеджера
+                const kpUrl = leadData.kpUrl || '';
+                await notifier.notifyKPSent({
+                    ...leadData,
+                    totalCash: proposal.totalCash,
+                    source: leadData.source || 'telegram',
+                }, kpUrl);
             } catch (err) {
                 logger.error('Pipeline', 'Ошибка отправки PDF', err.message);
             }
         } else {
             leadsStore.updatePipeline(leadId, 'kpSent');
             logger.demo('Pipeline', `КП ${pdf.filename} "отправлено" клиенту ${leadData.name}`);
+
+            // Уведомляем менеджера даже в демо
+            await notifier.notifyKPSent({
+                ...leadData,
+                totalCash: proposal.totalCash,
+                source: leadData.source || 'telegram',
+            }, leadData.kpUrl || '');
         }
 
         // Обновляем статус в CRM

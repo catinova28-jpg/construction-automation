@@ -53,5 +53,71 @@
     "createdAt": "2026-02-28T14:39:03.083Z",
     "views": 1,
     "lastViewedAt": "2026-02-28T14:40:43.472Z"
+  },
+  {
+    "id": "0bfdc52db0dfa084",
+    "filename": "kp_0bfdc52db0dfa084.html",
+    "leadName": "Алексей",
+    "leadPhone": "+79185551234",
+    "area": 120,
+    "totalCash": 5514450,
+    "createdAt": "2026-03-01T12:25:45.605Z",
+    "views": 0,
+    "lastViewedAt": null
+  },
+  {
+    "id": "84d88629e0df0c57",
+    "filename": "kp_84d88629e0df0c57.html",
+    "leadName": "Alexey",
+    "leadPhone": "+79185551234",
+    "area": 120,
+    "totalCash": 5514450,
+    "createdAt": "2026-03-01T12:26:20.887Z",
+    "views": 0,
+    "lastViewedAt": null
+  },
+  {
+    "id": "5053a50621a4944e",
+    "filename": "kp_5053a50621a4944e.html",
+    "leadName": "Тестовый Клиент",
+    "leadPhone": "+7 (999) 123-45-67",
+    "area": 120,
+    "totalCash": 7018250,
+    "createdAt": "2026-03-02T15:00:58.801Z",
+    "views": 5,
+    "lastViewedAt": "2026-03-02T15:02:03.354Z"
+  },
+  {
+    "id": "73b6a21d7c0405df",
+    "filename": "kp_73b6a21d7c0405df.html",
+    "leadName": "Тестовый Клиент",
+    "leadPhone": "+7 (999) 123-45-67",
+    "area": 120,
+    "totalCash": 7018250,
+    "createdAt": "2026-03-02T16:20:57.853Z",
+    "views": 0,
+    "lastViewedAt": null
+  },
+  {
+    "id": "b18a925fb406b449",
+    "filename": "kp_b18a925fb406b449.html",
+    "leadName": "Тест Уведомлений",
+    "leadPhone": "+7 918 123-45-67",
+    "area": 120,
+    "totalCash": 5136450,
+    "createdAt": "2026-03-04T11:22:20.579Z",
+    "views": 0,
+    "lastViewedAt": null
+  },
+  {
+    "id": "3b7fa226deb39052",
+    "filename": "kp_3b7fa226deb39052.html",
+    "leadName": "Алексей Смирнов",
+    "leadPhone": "+7 918 555-12-34",
+    "area": 150,
+    "totalCash": 6772000,
+    "createdAt": "2026-03-04T11:28:26.069Z",
+    "views": 0,
+    "lastViewedAt": null
   }
 ]

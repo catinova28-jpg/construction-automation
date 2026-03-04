@@ -13,9 +13,23 @@ const pdfGenerator = require('./src/pdf/pdf-generator');
 const aiAgent = require('./src/ai/ai-agent');
 const { generateKPTemplate } = require('./src/pdf/templates/kp-template');
 const { SERVICES, scoreLead, estimateCost } = require('./src/bot/qualification');
+const bitrix24 = require('./src/crm/bitrix24');
+const notifier = require('./src/notifications/telegram-notifier');
 
 const app = express();
 app.use(express.json());
+
+// PDF-каталог — прямая ссылка для скачивания / просмотра
+app.get('/catalog.pdf', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard', 'catalog', 'catalog.pdf'));
+});
+
+// Каталог домов — быстрая страница, замена медленного Битрикс-каталога
+// Маршрут ПЕРЕД static, чтобы не конфликтовал с папкой catalog/
+app.get('/catalog', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard', 'catalog.html'));
+});
+
 app.use(express.static(path.join(__dirname, 'dashboard')));
 app.use('/data', express.static(path.join(__dirname, 'data')));
 
@@ -148,6 +162,9 @@ app.post('/api/bitrix/lead', async (req, res) => {
 
         logger.success('Bitrix-Webhook', `КП готово: ${kpUrl}`);
 
+        // Уведомляем менеджера
+        await notifier.notifyKPSent({ ...leadData, totalCash: proposal.totalCash, estimatedCost: cost }, kpUrl);
+
         // Возвращаем ссылку на КП — робот Б24 может передать её обратно ИИ-продавцу
         res.json({
             success: true,
@@ -159,6 +176,188 @@ app.post('/api/bitrix/lead', async (req, res) => {
         });
     } catch (err) {
         logger.error('Bitrix-Webhook', 'Ошибка обработки лида', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==================== NEUROAGENTS API ====================
+
+/**
+ * Эндпоинт для инструмента Нейроагентов (generate_kp)
+ * ИИ-продавец Дмитрий вызывает этот endpoint через HTTP-инструмент,
+ * передавая параметры, собранные в диалоге с клиентом на Авито.
+ *
+ * Входные параметры ($input из Нейроагентов):
+ *   name     — имя клиента
+ *   phone    — телефон клиента
+ *   area     — площадь дома (м²)
+ *   floors   — этажность (1, 1.5, 2)
+ *   roofStyle — тип крыши (gable/hip/flat)
+ *   location — город/район
+ *   services — услуги (строка через запятую)
+ *
+ * Ответ — текст, который ИИ-продавец передаёт клиенту:
+ *   kpUrl, totalCash, totalMortgage
+ */
+app.post('/api/neuroagents/generate-kp', async (req, res) => {
+    try {
+        const body = req.body;
+        logger.info('Neuroagents', `Получен запрос КП: ${body.name || 'Без имени'}, ${body.area || '?'} м²`);
+
+        // Нормализуем данные из диалога
+        const areaNum = parseInt(String(body.area || '100').replace(/[^\d]/g, '')) || 100;
+
+        // Определяем этажность
+        let floors = '1';
+        let floorType = 'full';
+        const floorsRaw = String(body.floors || '1').trim();
+        if (floorsRaw.includes('1.5') || floorsRaw.includes('полтора') || floorsRaw.includes('мансард')) {
+            floors = '1.5';
+            floorType = 'mansard';
+        } else if (floorsRaw.includes('2') || floorsRaw.includes('два') || floorsRaw.includes('двух')) {
+            floors = '2';
+            floorType = 'full';
+        }
+
+        // Определяем тип крыши
+        let roofStyle = 'gable';
+        const roofRaw = String(body.roofStyle || 'двускатная').toLowerCase();
+        if (roofRaw.includes('hip') || roofRaw.includes('четырёх') || roofRaw.includes('четырех') || roofRaw.includes('вальм')) {
+            roofStyle = 'hip';
+        } else if (roofRaw.includes('flat') || roofRaw.includes('плоск')) {
+            roofStyle = 'flat';
+        }
+
+        // Парсим услуги
+        const defaultServices = 'foundation,sip_box,roof,facade,windows,engineering';
+        let services;
+        if (Array.isArray(body.services)) {
+            services = body.services;
+        } else {
+            const svcRaw = String(body.services || defaultServices);
+            services = svcRaw.split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        // Собираем данные лида
+        const leadData = {
+            name: body.name || 'Клиент Авито',
+            phone: body.phone || '',
+            area: areaNum,
+            budget: 0,
+            location: body.location || '',
+            timing: 'soon',
+            paymentForm: 'cash',
+            floors,
+            floorType,
+            roofStyle,
+            wallHeight: floors === '1' ? '2.8' : '2.5',
+            services,
+            source: 'neuroagents-avito',
+        };
+
+        // Скоринг
+        const score = scoreLead(leadData);
+        const cost = estimateCost(leadData);
+        leadData.estimatedCost = cost;
+        leadData.score = score.score;
+        leadData.temperature = score.temperature;
+        leadData.temperatureLabel = score.label;
+        leadData.category = score.category;
+        leadData.serviceNames = leadData.services.map(id => {
+            const s = SERVICES.find(srv => srv.id === id);
+            return s ? s.name : id;
+        });
+
+        // 1. Сохраняем лида
+        const lead = leadsStore.add(leadData);
+        leadsStore.updatePipeline(lead.id, 'crmCreated');
+
+        // 2. Генерируем КП
+        const proposal = await aiAgent.generateProposal(leadData);
+        const html = generateKPTemplate(proposal, leadData);
+
+        // 3. Сохраняем веб-КП
+        const kpEntry = kpStore.save(html, leadData, proposal);
+        const baseUrl = body.baseUrl || req.protocol + '://' + req.get('host');
+        const kpUrl = baseUrl + '/kp/' + kpEntry.id;
+
+        // 4. Генерируем PDF
+        const pdf = await pdfGenerator.generate(proposal, leadData);
+        leadsStore.updatePipeline(lead.id, 'kpGenerated');
+        leadsStore.update(lead.id, { pdfFile: pdf.filename, kpId: kpEntry.id, kpUrl });
+
+        logger.success('Neuroagents', `КП готово: ${kpUrl}`);
+
+        // Формат ответа для ИИ-продавца
+        // ИИ получит эти данные и передаст клиенту в чат Авито
+        const totalCash = proposal.totalCash || cost;
+        const totalMortgage = proposal.totalMortgage || Math.round(cost * 1.15);
+
+        // 5. Создаём сделку в Битрикс24 (если настроен webhook)
+        let dealResult = null;
+        try {
+            const dealData = { ...leadData, totalCash, kpUrl };
+            dealResult = await bitrix24.createDeal(dealData);
+            if (dealResult && dealResult.id) {
+                leadsStore.update(lead.id, { dealId: dealResult.id });
+                leadsStore.updatePipeline(lead.id, 'crmCreated');
+                logger.success('Neuroagents', `Сделка в Б24: ${dealResult.id}`);
+            }
+        } catch (bitrixErr) {
+            logger.error('Neuroagents', 'Ошибка Битрикс24 (не критичная)', bitrixErr.message);
+        }
+
+        // 6. Уведомляем менеджера в Telegram
+        await notifier.notifyKPSent({ ...leadData, totalCash }, kpUrl);
+
+        res.json({
+            success: true,
+            kpUrl,
+            kpId: kpEntry.id,
+            leadId: lead.id,
+            area: areaNum,
+            floors,
+            totalCash,
+            totalMortgage,
+            message: `КП для ${leadData.name} готово. Ссылка: ${kpUrl}. Стоимость: от ${totalCash.toLocaleString('ru-RU')} руб. (наличные) / ${totalMortgage.toLocaleString('ru-RU')} руб. (ипотека).`,
+        });
+    } catch (err) {
+        logger.error('Neuroagents', 'Ошибка генерации КП', err.message);
+        res.status(500).json({ error: 'Не удалось сгенерировать КП: ' + err.message });
+    }
+});
+
+// ==================== NOTIFY MANAGER API ====================
+
+/**
+ * Эндпоинт для ИИ-продавца: уведомить менеджера
+ * Типы:
+ *   callback_request — клиент хочет созвониться
+ *   custom_request   — индивидуальный запрос
+ */
+app.post('/api/neuroagents/notify-manager', async (req, res) => {
+    try {
+        const body = req.body;
+        const type = body.type || 'custom_request';
+
+        const data = {
+            name: body.name || 'Клиент',
+            phone: body.phone || '',
+            context: body.context || body.message || '',
+            source: body.source || 'neuroagents-avito',
+        };
+
+        logger.info('Notify', `Запрос уведомления: ${type} от ${data.name}`);
+
+        if (type === 'callback_request') {
+            await notifier.notifyCallbackRequest(data);
+        } else {
+            await notifier.notifyCustomRequest(data);
+        }
+
+        res.json({ success: true, message: 'Уведомление отправлено менеджеру' });
+    } catch (err) {
+        logger.error('Notify', 'Ошибка уведомления', err.message);
         res.status(500).json({ error: err.message });
     }
 });
@@ -275,6 +474,9 @@ async function start() {
 
     // Запускаем Telegram бота
     await telegramBot.init();
+
+    // Запускаем уведомления (используем бота для отправки)
+    notifier.init(telegramBot.bot);
 
     // Запускаем Express сервер
     app.listen(config.port, () => {
